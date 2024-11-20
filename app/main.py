@@ -22,6 +22,10 @@ class CredentialShareRequest(BaseModel):
 class CredentialRevocationRequest(BaseModel):
     credential_id: str
 
+class LoginCredentials(BaseModel):
+    username: str
+    password: str
+
 # Dependency for validating the token
 def get_current_user(authorization: str = Header(...)):
     token = authorization.split("Bearer ")[-1]
@@ -30,6 +34,18 @@ def get_current_user(authorization: str = Header(...)):
     return payload  # The payload can include user information (e.g., username or user id)
 
 # Endpoints
+
+# Token Generation Endpoint
+@app.post("/login")
+def login(credentials: LoginCredentials):
+    # In a real-world application, validate credentials against a database
+    if credentials.username == "user1" and credentials.password == "password123":
+        # Generate JWT token for the user
+        token = create_access_token({"sub": credentials.username})
+        return {"access_token": token}
+    else:
+        raise HTTPException(status_code=401, detail="Invalid credentials")
+
 @app.post("/issue-credential/")
 def issue_credential(credential: Credential, current_user: str = Depends(get_current_user)):
     credential_id = str(uuid.uuid4())
